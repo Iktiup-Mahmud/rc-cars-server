@@ -17,6 +17,7 @@ async function run() {
     try{
         const categoriesCollection = client.db('rc-cars').collection('categories')
         const productsCollection = client.db('rc-cars').collection('products')
+        const bookingsCollection = client.db('rc-cars').collection('bookings')
 
         app.get('/categories', async(req, res) => {
             const query = {}
@@ -28,10 +29,15 @@ async function run() {
             const name = req.params.name
             const query = { category : name }
             const options = await productsCollection.find(query).toArray()
-            console.log(options)
+            // console.log(options)
             res.send(options)
         })
 
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            const result = await bookingsCollection.insertOne(booking)
+            res.send(result)
+        })
 
     }
     finally{
