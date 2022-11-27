@@ -60,7 +60,20 @@ async function run() {
             res.send(result)
         })
 
-        
+        app.get('/myproducts', async (req, res) => {
+            const email = req.query.email
+            const query = { seller_email: email }
+            const myProducts = await productsCollection.find(query).toArray()
+            // console.log(myProducts)
+            res.send(myProducts)
+        })
+
+        app.delete('/deleteProduct/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const result = await productsCollection.deleteOne(filter)
+            return result
+        })
 
     }
     finally {
