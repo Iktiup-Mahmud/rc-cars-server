@@ -72,7 +72,44 @@ async function run() {
             const id = req.params.id
             const filter = { _id: ObjectId(id) }
             const result = await productsCollection.deleteOne(filter)
-            return result
+            res.send(result)
+        })
+
+        app.get('/all-seller', async(req, res) => {
+            const seller = req.query.type
+            const query = { role : seller }
+            const result = await usersCollection.find(query).toArray()
+            res.send(result)
+        })
+
+        app.delete('/deleteSeller/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const result = await usersCollection.deleteOne(filter)
+            // console.log(result)
+            res.send(result)
+        })
+
+        app.put('/user/verify/:id', async(req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const option = { upsert: true }
+            const updatedDoc = {
+                $set: {
+                    isVerified: "true"
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, option)
+            // console.log(result)
+            res.send(result)
+        })
+
+        app.get('/sellerMailVerify', async(req, res) => {
+            const email = req.query.email
+            const query = { email : email}
+            const result = await usersCollection.findOne(query)
+            // console.log(result)
+            res.send({isVerified: result?.isVerified === 'true'})
         })
 
     }
