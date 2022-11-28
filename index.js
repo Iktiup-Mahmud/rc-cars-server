@@ -193,7 +193,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/sellerMailVerify', verifyJWT, async(req, res) => {
+        app.get('/sellerMailVerify', async(req, res) => {
             const email = req.query.email
             const query = { email : email}
             const result = await usersCollection.findOne(query)
