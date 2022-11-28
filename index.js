@@ -4,6 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 require('colors')
 require('dotenv').config()
+const jwt = require('jsonwebtoken')
 
 const app = express();
 
@@ -12,6 +13,23 @@ app.use(express.json())
 
 const uri = process.env.URI
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization
+    if(!authHeader){
+        return res.status(401).send('unauthorized access')
+    }
+    const token = authHeader.split(' ')[1]
+    console.log(token)
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded){
+        if(err){
+            return res.status(403).send({message: 'forbidden accesssss'})
+        }
+        req.decoded = decoded
+        next()
+    })
+}
+
 
 async function run() {
     try {
@@ -24,6 +42,17 @@ async function run() {
             const query = {}
             const options = await categoriesCollection.find(query).toArray()
             res.send(options)
+        })
+
+        app.get('/jwt', async(req, res) => {
+            const email = req.query.email
+            const query = {email: email}
+            const user = await usersCollection.findOne(query)
+            if(user){
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {expiresIn: '7d'})
+                return res.send({accessToken: token})
+            }
+            res.status(403).send({accessToken : ''})
         })
 
         app.get('/categories/:name', async (req, res) => {
@@ -60,11 +89,15 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/myproducts', async (req, res) => {
+        app.get('/myproducts', verifyJWT, async (req, res) => {
             const email = req.query.email
+            const decodedEmail = req.decoded.email 
+            
+            if(email !== decodedEmail){
+                return res.status(401).send({ message: 'forbidden accessss' })
+            }
             const query = { seller_email: email }
             const myProducts = await productsCollection.find(query).toArray()
-            // console.log(myProducts)
             res.send(myProducts)
         })
 
@@ -110,6 +143,13 @@ async function run() {
             const result = await usersCollection.findOne(query)
             // console.log(result)
             res.send({isVerified: result?.isVerified === 'true'})
+        })
+
+        app.get('/ads', async (req, res) => {
+            const query = { isAdvertised : 'true'}
+            const myProducts = await productsCollection.find(query).toArray()
+            // console.log(myProducts)
+            res.send(myProducts)
         })
 
     }
