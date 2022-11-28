@@ -179,6 +179,20 @@ async function run() {
             res.send(result)
         })
 
+        app.put('/advertiseProduct/:id', verifyJWT, verifySeller, async(req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const option = { upsert: true }
+            const updatedDoc = {
+                $set: {
+                    isAdvertised: "true"
+                }
+            }
+            const result = await productsCollection.updateOne(filter, updatedDoc, option)
+            // console.log(result)
+            res.send(result)
+        })
+
         app.get('/sellerMailVerify', verifyJWT, async(req, res) => {
             const email = req.query.email
             const query = { email : email}
